@@ -1,0 +1,5 @@
+{
+  "name": "GradeMaster",
+  "description": "A comprehensive grade management system enabling students to track Regular, Mid-term, and Final grades across semesters. Features include bonus point management, detailed grade reasoning, and automatic TBM (Average) calculation.",
+  "requestFramePermissions": []
+}
