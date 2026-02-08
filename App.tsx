@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
                         placeholder="Tên môn học..." 
                         value={newSubjectName}
                         onChange={(e) => setNewSubjectName(e.target.value)}
-                        className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 bg-white placeholder-gray-400"
                         autoFocus
                     />
                     <button 

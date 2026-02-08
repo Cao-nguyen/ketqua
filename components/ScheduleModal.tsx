@@ -134,7 +134,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
                  <select 
                     value={selectedWeekId} 
                     onChange={(e) => handleWeekSelect(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-900 font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
                  >
                      {weeks.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                      <option value="new">+ Thêm tuần mới</option>
@@ -146,7 +146,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="Tên tuần (vd: Tuần 1)"
-                className="border border-gray-300 rounded-lg px-3 py-2 w-48 focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-48 focus:ring-2 focus:ring-indigo-500 outline-none text-gray-900 bg-white"
              />
 
              <div className="flex-grow"></div>
@@ -175,7 +175,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
                             <input 
                                 type="text" 
                                 placeholder="dd/mm" 
-                                className="w-20 text-xs text-center bg-white border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 outline-none"
+                                className="w-20 text-xs text-center text-gray-900 bg-white border border-gray-300 rounded px-1 py-0.5 focus:border-indigo-500 outline-none placeholder-gray-400"
                                 value={(formData.days as any)[d.key].date}
                                 onChange={(e) => handleDateChange(d.key, e.target.value)}
                             />
@@ -200,7 +200,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
                                          <input 
                                             list="subjects"
                                             placeholder="-"
-                                            className="w-full h-full text-center font-medium text-gray-700 bg-transparent rounded-md outline-none focus:bg-indigo-50 focus:text-indigo-700 placeholder-gray-300 transition"
+                                            className="w-full h-full text-center font-medium text-gray-900 bg-transparent rounded-md outline-none focus:bg-indigo-50 focus:text-indigo-700 placeholder-gray-400 transition"
                                             value={period.subjectName}
                                             onChange={(e) => handleCellChange(d.key, 'morning', pIndex, 'subjectName', e.target.value)}
                                          />
@@ -228,7 +228,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
                                          <input 
                                             list="subjects"
                                             placeholder="-"
-                                            className="w-full h-full text-center font-medium text-gray-700 bg-transparent rounded-md outline-none focus:bg-indigo-50 focus:text-indigo-700 placeholder-gray-300 transition"
+                                            className="w-full h-full text-center font-medium text-gray-900 bg-transparent rounded-md outline-none focus:bg-indigo-50 focus:text-indigo-700 placeholder-gray-400 transition"
                                             value={period.subjectName}
                                             onChange={(e) => handleCellChange(d.key, 'afternoon', pIndex, 'subjectName', e.target.value)}
                                          />

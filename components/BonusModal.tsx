@@ -55,7 +55,7 @@ const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, subjec
                     min="0.1"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition text-gray-900 bg-white"
                     autoFocus
                     />
                 </div>
@@ -66,7 +66,7 @@ const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, subjec
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Vd: Phát biểu..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition text-gray-900 bg-white"
                     />
                 </div>
             </div>

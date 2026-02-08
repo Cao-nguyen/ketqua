@@ -53,7 +53,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentU
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://script.google.com/macros/s/..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition font-mono text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition font-mono text-sm text-gray-900 bg-white placeholder-gray-400"
             />
           </div>
 

@@ -101,9 +101,9 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
               <table className="w-full text-xs">
                   <thead className="bg-gray-100 sticky top-0">
                       <tr>
-                          <th className="p-2 border-r">Tiết</th>
+                          <th className="p-2 border-r text-gray-700">Tiết</th>
                           {DAYS.map(d => (
-                              <th key={d.key} className="p-2 border-r min-w-[80px]">
+                              <th key={d.key} className="p-2 border-r min-w-[80px] text-gray-800">
                                   {d.label}<br/><span className="font-normal text-gray-500">{(week.days as any)[d.key].date}</span>
                               </th>
                           ))}
@@ -180,7 +180,7 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
                       min="0"
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-lg font-mono"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-lg font-mono text-gray-900 bg-white"
                       autoFocus
                       required
                     />
@@ -204,7 +204,7 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
                            <select 
                                 value={selectedWeekId} 
                                 onChange={(e) => setSelectedWeekId(e.target.value)}
-                                className="text-sm border rounded px-2 py-1"
+                                className="text-sm border rounded px-2 py-1 bg-white text-gray-900"
                            >
                                {weeks.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                            </select>
@@ -219,7 +219,7 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Vd: Kiểm tra 15p, Thi viết..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 h-20 resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 h-20 resize-none text-gray-900 bg-white placeholder-gray-400"
                   required
                 />
               </div>
@@ -277,7 +277,7 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
                         min="0.1"
                         value={bonusToUse}
                         onChange={(e) => setBonusToUse(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition text-gray-900 bg-white"
                     />
                  </div>
 
