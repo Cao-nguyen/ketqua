@@ -14,6 +14,7 @@ interface GradeContextType {
   deleteGrade: (subjectId: string, gradeId: string, type: GradeType) => void;
   addBonusPoint: (subjectId: string, value: number, reason: string) => void;
   useBonusPoint: (subjectId: string, gradeId: string, gradeType: GradeType, bonusAmount: number) => boolean;
+  updateSemester1Average: (subjectId: string, value: number | null) => void;
   
   // Schedule
   addWeek: (week: WeekSchedule) => void;
@@ -41,7 +42,13 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const loaded = loadData();
-    setData(loaded);
+    // Ensure existing data has the new field if it's missing (migration)
+    const migratedSubjects = loaded.subjects.map(s => ({
+        ...s,
+        semester1Average: s.semester1Average !== undefined ? s.semester1Average : null
+    }));
+    setData({ ...loaded, subjects: migratedSubjects });
+
     const config = loadConfig();
     if (config.sheetUrl) {
         setSheetUrlState(config.sheetUrl);
@@ -95,8 +102,14 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (result.success && result.data) {
           const loadedData = result.data as any;
           // Compatibility handling
+          const loadedSubjects = loadedData.subjectsSem2 || loadedData.subjects || [];
+          const migratedSubjects = loadedSubjects.map((s: any) => ({
+             ...s,
+             semester1Average: s.semester1Average !== undefined ? s.semester1Average : null
+          }));
+
           const newState: AppState = {
-              subjects: loadedData.subjectsSem2 || loadedData.subjects || [],
+              subjects: migratedSubjects,
               weeks: loadedData.weeks || []
           };
           setData(newState);
@@ -128,13 +141,22 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       regularGrades: [],
       midtermGrade: null,
       finalGrade: null,
-      bonusPoints: []
+      bonusPoints: [],
+      semester1Average: null
     };
     updateSubjects([...currentSubjects, newSubject]);
   };
 
   const deleteSubject = (id: string) => {
     updateSubjects(currentSubjects.filter(s => s.id !== id));
+  };
+
+  const updateSemester1Average = (subjectId: string, value: number | null) => {
+      const newSubjects = currentSubjects.map(sub => {
+          if (sub.id !== subjectId) return sub;
+          return { ...sub, semester1Average: value };
+      });
+      updateSubjects(newSubjects);
   };
 
   const addGrade = (subjectId: string, type: GradeType, value: number, reason: string) => {
@@ -276,6 +298,7 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteGrade,
       addBonusPoint,
       useBonusPoint,
+      updateSemester1Average,
       addWeek,
       updateWeek,
       deleteWeek,

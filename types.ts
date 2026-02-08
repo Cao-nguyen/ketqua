@@ -25,6 +25,7 @@ export interface SubjectData {
   midtermGrade: Grade | null;
   finalGrade: Grade | null;
   bonusPoints: BonusPoint[]; // Kho điểm cộng
+  semester1Average: number | null; // Điểm TBM Học Kỳ 1
 }
 
 // Schedule Types

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SubjectData, Grade, GradeType } from '../types';
 import { useGrade } from '../context/GradeContext';
-import { Plus, Database } from 'lucide-react';
+import { Plus, Database, ChevronRight } from 'lucide-react';
 import GradeInputModal from './GradeInputModal';
 import BonusModal from './BonusModal';
 
@@ -38,19 +38,14 @@ const EmptySlot: React.FC<{ onClick: () => void; label?: string }> = ({ onClick,
 );
 
 const SubjectRow: React.FC<{ subject: SubjectData }> = ({ subject }) => {
-  const { addGrade, updateGrade, deleteGrade, addBonusPoint, useBonusPoint, deleteSubject } = useGrade();
+  const { addGrade, updateGrade, deleteGrade, addBonusPoint, useBonusPoint, deleteSubject, updateSemester1Average } = useGrade();
   
   const [modalOpen, setModalOpen] = useState(false);
   const [bonusModalOpen, setBonusModalOpen] = useState(false);
   const [editingGrade, setEditingGrade] = useState<{ id: string, type: GradeType } | null>(null);
   const [targetType, setTargetType] = useState<GradeType>(GradeType.REGULAR);
 
-  // Calculate TBM (Average)
-  // Dynamic Formula:
-  // 1. Regular only: Sum(Reg) / Count(Reg)
-  // 2. Regular + Mid: (Sum(Reg) + Mid*2) / (Count(Reg) + 2)
-  // 3. Full: (Sum(Reg) + Mid*2 + Final*3) / (Count(Reg) + 5)
-  
+  // Calculate TBM HKII (Current Semester)
   const regSum = subject.regularGrades.reduce((sum, g) => sum + g.value, 0);
   const countReg = subject.regularGrades.length;
   const midVal = subject.midtermGrade ? subject.midtermGrade.value : 0;
@@ -82,6 +77,17 @@ const SubjectRow: React.FC<{ subject: SubjectData }> = ({ subject }) => {
           tbmValue = numerator / denominator;
           displayTbm = tbmValue.toFixed(2);
       }
+  }
+
+  // Calculate Full Year Average
+  // Formula: (HK1*2 + HK2*3) / 5
+  const tbmSem1 = subject.semester1Average;
+  let fullYearAverage = "---";
+  let fullYearValue = 0;
+
+  if (tbmSem1 !== null && tbmValue > 0) {
+      fullYearValue = (tbmSem1 * 2 + tbmValue * 3) / 5;
+      fullYearAverage = fullYearValue.toFixed(2);
   }
 
   const totalBonus = subject.bonusPoints.reduce((sum, b) => sum + b.value, 0);
@@ -118,6 +124,7 @@ const SubjectRow: React.FC<{ subject: SubjectData }> = ({ subject }) => {
 
   // Determine TBM Color
   const tbmColorClass = tbmValue > 0 ? getColor(tbmValue).replace('bg-', 'text-').split(' ')[1] : 'text-gray-400';
+  const fullYearColorClass = fullYearValue > 0 ? getColor(fullYearValue).replace('bg-', 'text-').split(' ')[1] : 'text-gray-400';
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4 hover:shadow-md transition duration-200">
@@ -143,11 +150,41 @@ const SubjectRow: React.FC<{ subject: SubjectData }> = ({ subject }) => {
             </div>
           </div>
           
-          <div className="mt-4">
-             <div className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-1">Trung Bình Môn</div>
-             <div className={`text-3xl font-bold ${tbmColorClass}`}>
-                {displayTbm}
+          <div className="mt-4 space-y-3">
+             {/* HK2 (Current) */}
+             <div>
+                <div className="text-xs text-gray-500 uppercase font-semibold tracking-wider mb-1">TBM HKII (Hiện tại)</div>
+                <div className={`text-3xl font-bold ${tbmColorClass}`}>
+                    {displayTbm}
+                </div>
              </div>
+             
+             {/* HK1 Input */}
+             <div className="flex items-center justify-between border-t border-gray-100 pt-2">
+                <div className="text-xs text-gray-500 font-medium">TBM HKI:</div>
+                <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    max="10"
+                    placeholder="-"
+                    value={subject.semester1Average !== null ? subject.semester1Average : ''}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        updateSemester1Average(subject.id, val === '' ? null : parseFloat(val));
+                    }}
+                    className="w-16 text-center border border-gray-300 rounded text-sm font-semibold text-gray-900 bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none p-1"
+                />
+             </div>
+
+             {/* Full Year Calculated */}
+             <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                 <div className="text-xs text-gray-500 font-bold uppercase">Cả Năm</div>
+                 <div className={`text-lg font-bold ${fullYearColorClass} flex items-center gap-1`}>
+                    {fullYearAverage}
+                 </div>
+             </div>
+             <div className="text-[10px] text-gray-400 text-right italic">(HK1*2 + HK2*3)/5</div>
           </div>
         </div>
 
