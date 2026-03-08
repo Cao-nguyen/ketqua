@@ -29,8 +29,15 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
         if (weeks.length > 0) {
-            setSelectedWeekId(weeks[0].id);
-            setFormData(weeks[0]);
+            // Find week with max number to select by default
+            const maxWeek = weeks.reduce((prev, current) => {
+                const prevNum = parseInt(prev.name.replace(/\D/g, '')) || 0;
+                const currNum = parseInt(current.name.replace(/\D/g, '')) || 0;
+                return currNum > prevNum ? current : prev;
+            });
+            
+            setSelectedWeekId(maxWeek.id);
+            setFormData(JSON.parse(JSON.stringify(maxWeek)));
         } else {
             initNewWeek();
         }
@@ -44,9 +51,17 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
         morning: Array(5).fill({ subjectName: '', teacherName: '' }), 
         afternoon: Array(5).fill({ subjectName: '', teacherName: '' }) 
     });
+
+    // Calculate next week number based on max existing week number
+    let nextWeekNum = 1;
+    if (weeks.length > 0) {
+        const maxNum = Math.max(...weeks.map(w => parseInt(w.name.replace(/\D/g, '')) || 0));
+        nextWeekNum = maxNum + 1;
+    }
+
     setFormData({
         id: uuidv4(),
-        name: `Tuần ${weeks.length + 1}`,
+        name: `Tuần ${nextWeekNum}`,
         days: {
             mon: emptyDay(), tue: emptyDay(), wed: emptyDay(), thu: emptyDay(), fri: emptyDay(), sat: emptyDay(), sun: emptyDay()
         }
@@ -63,6 +78,34 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
             setFormData(JSON.parse(JSON.stringify(w))); // Deep copy
         }
     }
+  };
+
+  const calculateNextDates = (startDate: string) => {
+      const parts = startDate.split('/');
+      if (parts.length !== 2) return null;
+      
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]);
+      
+      if (isNaN(day) || isNaN(month)) return null;
+
+      const currentYear = new Date().getFullYear();
+      // Create date object (months are 0-indexed in JS)
+      const date = new Date(currentYear, month - 1, day);
+      
+      // Check if valid date
+      if (date.getDate() !== day || date.getMonth() !== month - 1) return null;
+
+      const nextDates: Record<string, string> = {};
+      const dayKeys = ['tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+      
+      for (let i = 0; i < dayKeys.length; i++) {
+          date.setDate(date.getDate() + 1);
+          const d = date.getDate().toString().padStart(2, '0');
+          const m = (date.getMonth() + 1).toString().padStart(2, '0');
+          nextDates[dayKeys[i]] = `${d}/${m}`;
+      }
+      return nextDates;
   };
 
   const handleCellChange = (dayKey: string, session: 'morning' | 'afternoon', index: number, field: keyof PeriodInfo, value: string) => {
@@ -84,6 +127,19 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ isOpen, onClose }) => {
       if (!formData) return;
       const newDays = { ...formData.days } as any;
       newDays[dayKey].date = date;
+
+      // Auto-fill subsequent days if Monday is changed
+      if (dayKey === 'mon') {
+          const nextDates = calculateNextDates(date);
+          if (nextDates) {
+              Object.keys(nextDates).forEach(key => {
+                  if (newDays[key]) {
+                      newDays[key].date = nextDates[key];
+                  }
+              });
+          }
+      }
+
       setFormData({ ...formData, days: newDays });
   };
 
