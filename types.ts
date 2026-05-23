@@ -24,14 +24,24 @@ export interface SubjectData {
   regularGrades: Grade[];
   midtermGrade: Grade | null;
   finalGrade: Grade | null;
+  // HK1 fields
+  regularGrades1?: Grade[];
+  midtermGrade1?: Grade | null;
+  finalGrade1?: Grade | null;
+  
   bonusPoints: BonusPoint[]; // Kho điểm cộng
   semester1Average: number | null; // Điểm TBM Học Kỳ 1
+  
+  // Target goals
+  targetTBM1?: number | null;
+  targetTBM2?: number | null;
 }
 
 // Schedule Types
 export interface PeriodInfo {
   subjectName: string;
   teacherName: string;
+  isMidterm?: boolean;
 }
 
 export interface DaySchedule {
@@ -50,11 +60,24 @@ export interface WeekSchedule {
     thu: DaySchedule;
     fri: DaySchedule;
     sat: DaySchedule;
-    sun: DaySchedule;
+    sun?: DaySchedule;
   };
+}
+
+export interface Transaction {
+  id: string;
+  type: 'INCOME' | 'EXPENSE';
+  amount: number;
+  wallet: 'CASH' | 'BANK' | 'FUND';
+  bankCode?: string;
+  bankName?: string;
+  bankLogo?: string;
+  description: string;
+  timestamp: number;
 }
 
 export interface AppState {
   subjects: SubjectData[];
   weeks: WeekSchedule[];
+  transactions?: Transaction[];
 }

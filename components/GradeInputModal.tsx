@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, Trash2, Wand2, Calendar } from 'lucide-react';
 import { Grade, GradeType, WeekSchedule, DaySchedule } from '../types';
 import { useGrade } from '../context/GradeContext';
@@ -154,7 +155,7 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
       );
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden animate-fade-in-up flex flex-col max-h-[90vh]">
         <div className="bg-indigo-600 px-6 py-4 flex justify-between items-center flex-shrink-0">
@@ -230,12 +231,11 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
                     <button
                         type="button"
                         onClick={() => {
-                            if(window.confirm('Bạn có chắc chắn muốn xóa điểm này?')) {
-                                onDelete();
-                                onClose();
-                            }
+                            onDelete();
+                            onClose();
                         }}
-                        className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 px-2 py-1 hover:bg-red-50 rounded"
+                        className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 px-2 py-1 hover:bg-red-50 rounded transition-colors"
+                        title="Xóa điểm này"
                     >
                         <Trash2 size={16} /> Xóa
                     </button>
@@ -300,7 +300,8 @@ const GradeInputModal: React.FC<GradeInputModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

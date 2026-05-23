@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { X, PlusCircle, History } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, PlusCircle, History, Trash2 } from 'lucide-react';
 import { BonusPoint } from '../types';
 
 interface BonusModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (value: number, reason: string) => void;
+  onDelete?: (id: string) => void;
   subjectName: string;
   bonusPoints: BonusPoint[];
 }
 
-const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, subjectName, bonusPoints }) => {
-  const [value, setValue] = useState<string>('0.5');
+const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, onDelete, subjectName, bonusPoints }) => {
+  const [value, setValue] = useState<string>('1');
   const [reason, setReason] = useState('');
 
   if (!isOpen) return null;
@@ -22,14 +24,12 @@ const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, subjec
     if (!isNaN(numVal) && numVal > 0 && reason.trim()) {
       onSave(numVal, reason);
       setReason('');
-      setValue('0.5');
-      // Don't close immediately if user wants to see list, but UX standard is close on save.
-      // Let's keep it open? No, close is better.
+      setValue('1');
       onClose();
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up flex flex-col max-h-[80vh]">
         <div className="bg-indigo-600 px-6 py-4 flex justify-between items-center flex-shrink-0">
@@ -96,8 +96,19 @@ const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, subjec
                                     <p className="text-sm font-medium text-gray-800">{bp.reason}</p>
                                     <p className="text-xs text-gray-400">{new Date(bp.timestamp).toLocaleDateString('vi-VN')}</p>
                                 </div>
-                                <div className="bg-amber-100 text-amber-700 font-bold px-2 py-1 rounded text-sm">
-                                    +{bp.value}
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-amber-100 text-amber-700 font-bold px-2 py-1 rounded text-sm">
+                                        +{bp.value}
+                                    </div>
+                                    {onDelete && (
+                                        <button 
+                                            onClick={() => onDelete(bp.id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                            title="Xóa điểm cộng"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -106,7 +117,8 @@ const BonusModal: React.FC<BonusModalProps> = ({ isOpen, onClose, onSave, subjec
             </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
