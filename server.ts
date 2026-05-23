@@ -89,10 +89,11 @@ async function startServer() {
     } else {
         const distPath = path.join(process.cwd(), 'dist');
 
+        // Static files
         app.use(express.static(distPath));
 
-        // FIX EXPRESS 5
-        app.get('/*', (req, res) => {
+        // SPA fallback for React Router
+        app.use((req, res) => {
             res.sendFile(path.join(distPath, 'index.html'));
         });
     }
