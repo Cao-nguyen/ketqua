@@ -39,7 +39,11 @@ interface GradeContextType {
 const GradeContext = createContext<GradeContextType | undefined>(undefined);
 
 export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<AppState>({ subjects: [], weeks: [] });
+ const [data, setData] = useState<AppState>({
+  subjects: [],
+  weeks: [],
+  transactions: []
+});
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   
@@ -107,10 +111,11 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               }));
           }
 
-          setData({
-            subjects: loadedSubjects,
-            weeks: loadedWeeks
-          });
+         setData({
+  subjects: loadedSubjects,
+  weeks: loadedWeeks,
+  transactions: result.transactions || []
+});
         }
       } catch (error) {
         console.error("Failed to load data from MongoDB:", error);
