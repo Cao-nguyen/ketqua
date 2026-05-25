@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGrade } from '../context/GradeContext';
 import { Transaction } from '../types';
-import { Plus, Wallet, Landmark, PiggyBank, ArrowDownRight, ArrowUpRight, Search, Check, Trash2, Edit2, Info } from 'lucide-react';
+import { Plus, Wallet, Landmark, PiggyBank, CreditCard, ArrowDownRight, ArrowUpRight, Search, Check, Trash2, Edit2, Info } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Bank {
@@ -36,8 +36,9 @@ const FinanceView: React.FC = () => {
     const totalCash = transactions.filter(t => t.wallet === 'CASH').reduce((sum, t) => sum + (t.type === 'INCOME' ? t.amount : -t.amount), 0);
     const totalBank = transactions.filter(t => t.wallet === 'BANK').reduce((sum, t) => sum + (t.type === 'INCOME' ? t.amount : -t.amount), 0);
     const totalFund = transactions.filter(t => t.wallet === 'FUND').reduce((sum, t) => sum + (t.type === 'INCOME' ? t.amount : -t.amount), 0);
+    const totalDebt = transactions.filter(t => t.wallet === 'DEBT').reduce((sum, t) => sum + (t.type === 'INCOME' ? t.amount : -t.amount), 0);
 
-    const totalMoney = totalCash + totalBank + totalFund;
+    const totalMoney = totalCash + totalBank + totalFund + totalDebt;
     
     // Total income/expense (this month/all time - we'll do all time for now)
     const totalIncome = transactions.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + t.amount, 0);
@@ -113,7 +114,7 @@ const FinanceView: React.FC = () => {
                 </div>
 
                 {/* Wallets */}
-                <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-gray-100/80">
                         <div className="p-3 bg-emerald-50 text-emerald-600 w-fit rounded-2xl mb-3">
                             <Wallet size={20} />
@@ -135,47 +136,63 @@ const FinanceView: React.FC = () => {
                         <div className="text-gray-500 text-xs sm:text-sm mb-1">Tiền quỹ</div>
                         <div className="font-bold text-gray-900 truncate">{formatVND(totalFund)}</div>
                     </div>
+                    <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-gray-100/80">
+                        <div className="p-3 bg-red-50 text-red-600 w-fit rounded-2xl mb-3">
+                            <CreditCard size={20} />
+                        </div>
+                        <div className="text-gray-500 text-xs sm:text-sm mb-1">Ghi nợ</div>
+                        <div className="font-bold text-gray-900 truncate">{formatVND(totalDebt)}</div>
+                    </div>
                 </div>
 
                 {/* Transactions List */}
-                <div className="bg-white rounded-3xl p-5 shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-gray-100/80">
-                    <h3 className="font-bold text-gray-800 text-lg mb-4">Giao dịch gần đây</h3>
+                <div className="bg-white rounded-3xl p-6 shadow-[0_2px_20px_rgba(0,0,0,0.02)] border border-gray-100/80">
+                    <h3 className="font-bold text-gray-900 text-xl mb-6">Giao dịch gần đây</h3>
                     
                     {transactions.length === 0 ? (
-                        <div className="text-center py-8">
+                        <div className="text-center py-10">
+                            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Landmark className="text-gray-400" size={24} />
+                            </div>
                             <p className="text-gray-500">Chưa có giao dịch. Bấm "Giao dịch mới" để thêm.</p>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             {[...transactions].sort((a,b) => b.timestamp - a.timestamp).map(t => (
-                                <div key={t.id} className="flex items-center gap-4 group">
-                                    <div className={`p-3 rounded-2xl flex-shrink-0 ${t.type === 'INCOME' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                        {t.type === 'INCOME' ? <ArrowDownRight size={20} /> : <ArrowUpRight size={20} />}
+                                <div key={t.id} className="flex items-center gap-4 group hover:bg-gray-50/50 p-3 -mx-3 rounded-2xl transition-colors">
+                                    <div className={`p-4 rounded-2xl flex-shrink-0 ${t.type === 'INCOME' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                        {t.type === 'INCOME' ? <ArrowDownRight size={24} /> : <ArrowUpRight size={24} />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <p className="font-semibold text-gray-900 truncate">{t.description}</p>
-                                            <p className={`font-bold whitespace-nowrap ml-2 ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-gray-900'}`}>{t.type === 'INCOME' ? '+' : '-'}{formatVND(t.amount)}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <p className="font-semibold text-gray-900 text-lg truncate">{t.description}</p>
+                                        <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                                             <span>{new Date(t.timestamp).toLocaleDateString('vi-VN')}</span>
-                                            <span>•</span>
-                                            {t.wallet === 'CASH' && <span className="flex items-center gap-1"><Wallet size={12}/> Tiền mặt</span>}
-                                            {t.wallet === 'FUND' && <span className="flex items-center gap-1"><PiggyBank size={12}/> Tiền quỹ</span>}
-                                            {t.wallet === 'BANK' && (
-                                                <span className="flex items-center gap-1">
-                                                    {t.bankLogo ? <img src={t.bankLogo} alt={t.bankName} className="w-4 h-4 rounded-full object-contain bg-white" /> : <Landmark size={12}/>}
-                                                    {t.bankName || 'Ngân hàng'}
-                                                </span>
-                                            )}
+                                            <span className="text-gray-300">•</span>
+                                            {t.wallet === 'CASH' && <span className="flex items-center gap-1.5 font-medium text-gray-600"><Wallet size={16}/> Tiền mặt</span>}
+                                            {t.wallet === 'FUND' && <span className="flex items-center gap-1.5 font-medium text-gray-600"><PiggyBank size={16}/> Tiền quỹ</span>}
+                                            {t.wallet === 'DEBT' && <span className="flex items-center gap-1.5 font-medium text-gray-600"><CreditCard size={18}/> Ghi nợ</span>}
+                                            {t.wallet === 'BANK' && <span className="flex items-center gap-1.5 font-medium text-gray-600"><Landmark size={18}/> Ngân hàng</span>}
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                    {t.wallet === 'BANK' && t.bankLogo && (
+                                        <div className="flex items-center justify-center flex-shrink-0 w-24">
+                                            <div className="bg-white rounded-xl p-1.5 border border-gray-100 shadow-sm flex flex-col items-center">
+                                                <img src={t.bankLogo} alt={t.bankName} className="h-8 w-16 object-contain" />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-col items-end flex-shrink-0 min-w-[120px]">
+                                        <p className={`font-bold whitespace-nowrap text-xl ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-gray-900'}`}>{t.type === 'INCOME' ? '+' : '-'}{formatVND(t.amount)}</p>
+                                    </div>
+                                    
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                                         <button onClick={() => handleOpenEdit(t)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                                            <Edit2 size={16} />
+                                            <Edit2 size={18} />
                                         </button>
                                         <button onClick={() => { if(window.confirm('Xóa giao dịch này?')) deleteTransaction(t.id); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                                            <Trash2 size={16} />
+                                            <Trash2 size={18} />
                                         </button>
                                     </div>
                                 </div>
@@ -316,7 +333,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, on
                         {/* Wallet Selection */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Nguồn tiền</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setWallet('CASH')}
@@ -341,6 +358,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, on
                                     <PiggyBank size={20} className="mb-2" />
                                     <span className="text-xs">Tiền quỹ</span>
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setWallet('DEBT')}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all border ${wallet === 'DEBT' ? 'bg-red-50 border-red-200 text-red-700 font-semibold' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <CreditCard size={20} className="mb-2" />
+                                    <span className="text-xs">Ghi nợ</span>
+                                </button>
                             </div>
                         </div>
 
@@ -356,8 +381,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, on
                                     <div className="flex items-center gap-3">
                                         {selectedBank ? (
                                             <>
-                                                <img src={selectedBank.logo} alt={selectedBank.shortName} className="h-6 object-contain" />
-                                                <span className="font-medium text-gray-900">{selectedBank.shortName}</span>
+                                                <img src={selectedBank.logo} alt={selectedBank.shortName} className="h-8 object-contain" />
+                                                <span className="font-medium text-gray-900 border-l border-gray-200 pl-3">{selectedBank.shortName} - {selectedBank.name}</span>
                                             </>
                                         ) : (
                                             <span className="text-gray-400">Chọn ngân hàng...</span>
@@ -387,13 +412,14 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, on
                                                         setBankCode(bank.code);
                                                         setIsBankMenuOpen(false);
                                                     }}
-                                                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                                                    className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
                                                 >
-                                                    <img src={bank.logo} alt={bank.shortName} className="h-6 w-10 object-contain" />
+                                                    <img src={bank.logo} alt={bank.shortName} className="h-8 w-12 object-contain" />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-medium text-gray-900 text-sm truncate">{bank.shortName}</div>
+                                                        <div className="font-medium text-gray-900 text-base truncate">{bank.shortName}</div>
+                                                        <div className="text-gray-500 text-xs truncate mt-0.5">{bank.name}</div>
                                                     </div>
-                                                    {bankCode === bank.code && <Check size={16} className="text-blue-600" />}
+                                                    {bankCode === bank.code && <Check size={20} className="text-blue-600" />}
                                                 </button>
                                             ))}
                                             {filteredBanks.length === 0 && (

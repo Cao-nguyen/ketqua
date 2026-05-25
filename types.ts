@@ -68,7 +68,7 @@ export interface Transaction {
   id: string;
   type: 'INCOME' | 'EXPENSE';
   amount: number;
-  wallet: 'CASH' | 'BANK' | 'FUND';
+  wallet: 'CASH' | 'BANK' | 'FUND' | 'DEBT';
   bankCode?: string;
   bankName?: string;
   bankLogo?: string;
