@@ -127,6 +127,19 @@ const GoalsView: React.FC = () => {
                                    onChange={(e) => updateSubject(sub.id, isHk1 ? { goalRegular1: e.target.value } : { goalRegular2: e.target.value })}
                                    className="w-full min-w-[100px] text-center py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
                                 />
+                                <div className="mt-2 text-xs flex flex-col justify-center items-center gap-1">
+                                    <span className="text-gray-500 font-medium">Thực tế: {actualReg.length > 0 ? actualReg.map(g => g.value).join(', ') : '-'}</span>
+                                    {actualReg.length > 0 && goalReg.length > 0 && (
+                                        <div className="flex gap-2">
+                                            {actualReg.map((aGrade, idx) => {
+                                                const gVal = goalReg[idx];
+                                                if (gVal === undefined) return null;
+                                                const diff = aGrade.value - gVal;
+                                                return <span key={idx} className={`font-semibold ${diff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{diff > 0 ? '+' : ''}{parseFloat(diff.toFixed(2))}</span>;
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                              </td>
                              <td className="p-4 align-middle text-center">
                                 <input 
@@ -137,6 +150,15 @@ const GoalsView: React.FC = () => {
                                    onChange={(e) => updateSubject(sub.id, isHk1 ? { goalMidterm1: e.target.value } : { goalMidterm2: e.target.value })}
                                    className="w-16 text-center py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
                                 />
+                                <div className="mt-2 text-xs flex justify-center items-center gap-2">
+                                    <span className="text-gray-500 font-medium">Thực tế: {actualMid?.value ?? '-'}</span>
+                                    {actualMid?.value !== undefined && goalMid !== null && (
+                                        (() => {
+                                            const diff = actualMid.value - goalMid;
+                                            return <span className={`font-semibold ${diff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{diff > 0 ? '+' : ''}{diff.toFixed(2)}</span>;
+                                        })()
+                                    )}
+                                </div>
                              </td>
                              <td className="p-4 align-middle text-center">
                                 <input 
@@ -147,6 +169,15 @@ const GoalsView: React.FC = () => {
                                    onChange={(e) => updateSubject(sub.id, isHk1 ? { goalFinal1: e.target.value } : { goalFinal2: e.target.value })}
                                    className="w-16 text-center py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
                                 />
+                                <div className="mt-2 text-xs flex justify-center items-center gap-2">
+                                    <span className="text-gray-500 font-medium">Thực tế: {actualFin?.value ?? '-'}</span>
+                                    {actualFin?.value !== undefined && goalFin !== null && (
+                                        (() => {
+                                            const diff = actualFin.value - goalFin;
+                                            return <span className={`font-semibold ${diff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{diff > 0 ? '+' : ''}{diff.toFixed(2)}</span>;
+                                        })()
+                                    )}
+                                </div>
                              </td>
                              
                              <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-blue-50/30">
@@ -165,9 +196,9 @@ const GoalsView: React.FC = () => {
                              </td>
                              <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-gray-50/30">
                                 <div className="font-bold text-lg text-gray-800">{actualTBM > 0 ? actualTBM.toFixed(2) : '-'}</div>
-                                {difference !== null && (
-                                    <div className={`text-xs mt-1 font-semibold ${difference > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                        {difference > 0 ? '+' : ''}{difference.toFixed(2)}
+                                {targetTBM > 0 && actualTBM > 0 && (
+                                    <div className={`text-xs mt-1 font-semibold ${actualTBM - targetTBM >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        {actualTBM - targetTBM > 0 ? '+' : ''}{(actualTBM - targetTBM).toFixed(2)}
                                     </div>
                                 )}
                              </td>
