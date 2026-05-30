@@ -35,6 +35,12 @@ export interface SubjectData {
   // Target goals
   targetTBM1?: number | null;
   targetTBM2?: number | null;
+  goalRegular1?: string;
+  goalMidterm1?: string;
+  goalFinal1?: string;
+  goalRegular2?: string;
+  goalMidterm2?: string;
+  goalFinal2?: string;
 }
 
 // Schedule Types
@@ -76,8 +82,17 @@ export interface Transaction {
   timestamp: number;
 }
 
+export interface Achievement {
+  id: string;
+  prize: string;
+  competition: string;
+  level: string;
+  timestamp: number;
+}
+
 export interface AppState {
   subjects: SubjectData[];
   weeks: WeekSchedule[];
   transactions?: Transaction[];
+  achievements?: Achievement[];
 }

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { GradeProvider, useGrade } from './context/GradeContext';
+import { GradeProvider, useGrade, calculateTBM, parseGradeString } from './context/GradeContext';
 import SubjectRow from './components/SubjectRow';
 import StatsBoard from './components/StatsBoard';
 import ScheduleModal from './components/ScheduleModal';
-import { Plus, GraduationCap, CalendarDays, Target, BarChart2, Wallet, Settings } from 'lucide-react';
+import { Plus, GraduationCap, CalendarDays, Target, BarChart2, Wallet, Settings, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StatsView from './components/StatsView';
 import FinanceView from './components/FinanceView';
+import AchievementsView from './components/AchievementsView';
 
 const emptyViewState = {
   opacity: 0,
@@ -36,7 +37,7 @@ const EmptyView: React.FC<{ title: string, description: string }> = ({ title, de
 );
 
 const GoalsView: React.FC = () => {
-    const { subjects, updateTargetTBM1, updateTargetTBM2, activeSemester, setActiveSemester } = useGrade();
+    const { subjects, updateSubject, activeSemester, setActiveSemester } = useGrade();
     
     return (
       <motion.div 
@@ -65,79 +66,114 @@ const GoalsView: React.FC = () => {
   
         <div className="px-4 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto mt-4">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[700px]">
                   <thead>
                       <tr className="bg-gray-50/80 border-b border-gray-100 text-sm text-gray-500 font-semibold tracking-wide">
-                          <th className="p-4 whitespace-nowrap min-w-[150px]">Môn học</th>
-                          {activeSemester === 'HK1' ? (
-                              <th className="p-4 whitespace-nowrap text-center text-blue-600 bg-blue-50/30">Mục tiêu TBM HK1</th>
-                          ) : (
-                              <>
-                                  <th className="p-4 whitespace-nowrap text-center text-blue-600 bg-blue-50/30">Mục tiêu TBM HK1</th>
-                                  <th className="p-4 whitespace-nowrap text-center text-emerald-600 bg-emerald-50/30">Mục tiêu TBM HK2</th>
-                              </>
-                          )}
+                          <th className="p-4 whitespace-nowrap sticky left-0 bg-gray-50/80 z-10 w-40 drop-shadow-[2px_0_4px_rgba(0,0,0,0.02)]">Môn học</th>
+                          <th className="p-4 whitespace-nowrap text-center">Thường xuyên</th>
+                          <th className="p-4 whitespace-nowrap text-center">Giữa kỳ</th>
+                          <th className="p-4 whitespace-nowrap text-center">Cuối kỳ</th>
+                          <th className="p-4 whitespace-nowrap text-center w-32 border-l border-gray-100 bg-blue-50/30 text-blue-700 font-bold">TBM Mục tiêu</th>
+                          <th className="p-4 whitespace-nowrap text-center w-32 bg-gray-50/50 text-gray-700 font-bold">TBM Thực tế</th>
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                      {subjects.map((sub) => (
+                      {subjects.map((sub) => {
+                          const isHk1 = activeSemester === 'HK1';
+                          
+                          // Calculate Actual
+                          const actualReg = isHk1 ? (sub.regularGrades1 || []) : sub.regularGrades;
+                          const actualMid = isHk1 ? sub.midtermGrade1 : sub.midtermGrade;
+                          const actualFin = isHk1 ? sub.finalGrade1 : sub.finalGrade;
+                          const actualTBMCalc = calculateTBM(actualReg.map(g=>g.value), actualMid?.value ?? null, actualFin?.value ?? null);
+                          const actualTBM = isHk1 && actualTBMCalc === 0 ? (sub.semester1Average || 0) : actualTBMCalc;
+
+                          // Goals Parsing & Calculation
+                          const goalRegStr = isHk1 ? sub.goalRegular1 : sub.goalRegular2;
+                          const goalMidStr = isHk1 ? sub.goalMidterm1 : sub.goalMidterm2;
+                          const goalFinStr = isHk1 ? sub.goalFinal1 : sub.goalFinal2;
+
+                          const goalReg = parseGradeString(goalRegStr);
+                          const goalMid = goalMidStr ? parseFloat(goalMidStr) : null;
+                          const goalFin = goalFinStr ? parseFloat(goalFinStr) : null;
+
+                          // The user can override targetTBM manually, or we calculate it. 
+                          // If they enter specific detailed goals, we calculate Target TBM.
+                          // Wait, since they want it "như điểm số luôn á", we auto-calculate the target TBM dynamically.
+                          
+                          let targetTBM = calculateTBM(goalReg, goalMid, goalFin);
+                          // If targetTBM is 0 because no detailed inputs, we fall back to manual TargetTBM fallback if it exists.
+                          const hasDetailedInputs = goalReg.length > 0 || goalMid !== null || goalFin !== null;
+                          if (!hasDetailedInputs) {
+                              targetTBM = (isHk1 ? sub.targetTBM1 : sub.targetTBM2) || 0;
+                          }
+
+                          // Comparison Difference
+                          // "Khi điểm mục tiêu lớn hơn điểm chính thì hiển thị màu xanh + lớn hơn bao nhiêu, ngược lại hiện màu đỏ + nhỏ hơn bao nhiêu"
+                          // Difference = targetTBM - actualTBM. 
+                          // If targetTBM > actualTBM => green (+ difference)? "mục tiêu lớn hơn chính hiển thị xanh". Wait! If my target is 9, but actual is 8 => diff is 1 => green + 1.0!
+                          const difference = targetTBM > 0 && actualTBM > 0 ? targetTBM - actualTBM : null;
+
+                          return (
                           <tr key={sub.id} className="group hover:bg-[#fafafa] transition duration-200">
-                             <td className="p-4 align-middle">
-                                <h3 className="font-semibold text-gray-900 leading-tight">{sub.name}</h3>
+                             <td className="p-4 align-middle sticky left-0 bg-white group-hover:bg-[#fafafa] z-10 font-semibold text-gray-900 border-r border-gray-50">
+                                {sub.name}
+                             </td>
+                             <td className="p-4 align-middle text-center">
+                                <input 
+                                   type="text" 
+                                   placeholder="8, 9..."
+                                   value={goalRegStr || ''}
+                                   onChange={(e) => updateSubject(sub.id, isHk1 ? { goalRegular1: e.target.value } : { goalRegular2: e.target.value })}
+                                   className="w-full min-w-[100px] text-center py-2 px-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
+                                />
+                             </td>
+                             <td className="p-4 align-middle text-center">
+                                <input 
+                                   type="number" 
+                                   step="0.01" min="0" max="10"
+                                   placeholder="-"
+                                   value={goalMidStr || ''}
+                                   onChange={(e) => updateSubject(sub.id, isHk1 ? { goalMidterm1: e.target.value } : { goalMidterm2: e.target.value })}
+                                   className="w-16 text-center py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
+                                />
+                             </td>
+                             <td className="p-4 align-middle text-center">
+                                <input 
+                                   type="number" 
+                                   step="0.01" min="0" max="10"
+                                   placeholder="-"
+                                   value={goalFinStr || ''}
+                                   onChange={(e) => updateSubject(sub.id, isHk1 ? { goalFinal1: e.target.value } : { goalFinal2: e.target.value })}
+                                   className="w-16 text-center py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
+                                />
                              </td>
                              
-                             {activeSemester === 'HK1' ? (
-                                <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-blue-50/30">
-                                   <input 
+                             <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-blue-50/30">
+                                {hasDetailedInputs ? (
+                                    <div className="font-bold text-lg text-blue-700">{targetTBM > 0 ? targetTBM.toFixed(2) : '-'}</div>
+                                ) : (
+                                    <input 
                                        type="number" 
-                                       step="0.01" 
-                                       min="0" 
-                                       max="10"
-                                       placeholder="-"
-                                       value={sub.targetTBM1 !== null && sub.targetTBM1 !== undefined ? sub.targetTBM1 : ''}
-                                       onChange={(e) => {
-                                           const val = e.target.value;
-                                           updateTargetTBM1(sub.id, val === '' ? null : parseFloat(val));
-                                       }}
-                                       className="w-20 text-center py-1 border border-blue-200 rounded-lg text-sm font-semibold text-blue-900 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
-                                   />
-                                </td>
-                             ) : (
-                                <>
-                                    <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-blue-50/30">
-                                       <input 
-                                           type="number" 
-                                           step="0.01" 
-                                           min="0" 
-                                           max="10"
-                                           placeholder="-"
-                                           value={sub.targetTBM1 !== null && sub.targetTBM1 !== undefined ? sub.targetTBM1 : ''}
-                                           onChange={(e) => {
-                                               const val = e.target.value;
-                                               updateTargetTBM1(sub.id, val === '' ? null : parseFloat(val));
-                                           }}
-                                           className="w-20 text-center py-1 border border-blue-200 rounded-lg text-sm font-semibold text-blue-900 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition"
-                                       />
-                                    </td>
-                                    <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-emerald-50/30">
-                                       <input 
-                                           type="number" 
-                                           step="0.01" 
-                                           min="0" 
-                                           max="10"
-                                           placeholder="-"
-                                           value={sub.targetTBM2 !== null && sub.targetTBM2 !== undefined ? sub.targetTBM2 : ''}
-                                           onChange={(e) => {
-                                               const val = e.target.value;
-                                               updateTargetTBM2(sub.id, val === '' ? null : parseFloat(val));
-                                           }}
-                                           className="w-20 text-center py-1 border border-emerald-200 rounded-lg text-sm font-semibold text-emerald-900 bg-white shadow-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none transition"
-                                       />
-                                    </td>
-                                </>
-                             )}
+                                       step="0.01" min="0" max="10"
+                                       placeholder="TBM..."
+                                       value={targetTBM > 0 ? targetTBM : ''}
+                                       onChange={(e) => updateSubject(sub.id, isHk1 ? { targetTBM1: e.target.value ? parseFloat(e.target.value) : null } : { targetTBM2: e.target.value ? parseFloat(e.target.value) : null })}
+                                       className="w-16 text-center py-1 border border-blue-200 rounded-lg text-sm font-semibold text-blue-900 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition mx-auto"
+                                    />
+                                )}
+                             </td>
+                             <td className="p-4 align-middle text-center border-l border-gray-50/50 bg-gray-50/30">
+                                <div className="font-bold text-lg text-gray-800">{actualTBM > 0 ? actualTBM.toFixed(2) : '-'}</div>
+                                {difference !== null && (
+                                    <div className={`text-xs mt-1 font-semibold ${difference > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        {difference > 0 ? '+' : ''}{difference.toFixed(2)}
+                                    </div>
+                                )}
+                             </td>
                           </tr>
-                      ))}
+                          );
+                      })}
                   </tbody>
               </table>
           </div>
@@ -331,7 +367,7 @@ const ScheduleView: React.FC = () => {
   );
 };
 
-type TabType = 'grades' | 'goals' | 'schedule' | 'stats' | 'finance';
+type TabType = 'grades' | 'goals' | 'schedule' | 'stats' | 'finance' | 'achievements';
 
 const MainLayout: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>('grades');
@@ -373,6 +409,13 @@ const MainLayout: React.FC = () => {
                 <Wallet size={22} strokeWidth={activeTab === 'finance' ? 2.5 : 2} />
                 <span className="hidden md:block">Tài chính</span>
             </button>
+            <button 
+                onClick={() => setActiveTab('achievements')}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'achievements' ? 'bg-blue-50 text-blue-600 font-semibold shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+            >
+                <Trophy size={22} strokeWidth={activeTab === 'achievements' ? 2.5 : 2} />
+                <span className="hidden md:block">Thành tích</span>
+            </button>
         </>
     );
 
@@ -412,13 +455,14 @@ const MainLayout: React.FC = () => {
                         {activeTab === 'schedule' && <ScheduleView key="schedule" />}
                         {activeTab === 'stats' && <StatsView key="stats" />}
                         {activeTab === 'finance' && <FinanceView key="finance" />}
+                        {activeTab === 'achievements' && <AchievementsView key="achievements" />}
                     </AnimatePresence>
                 </div>
             </main>
 
             {/* Mobile Bottom Tab Bar */}
-            <div className="md:hidden bg-white/90 backdrop-blur-xl border-t border-gray-200/50 pb-safe pt-2 absolute bottom-0 w-full z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] overflow-x-auto scroolbar-hide">
-                <div className="flex justify-start sm:justify-around items-center px-4 pb-6 pt-2 gap-6 min-w-max">
+            <div className="md:hidden bg-white/90 backdrop-blur-xl border-t border-gray-200/50 pb-safe pt-2 fixed bottom-0 w-full z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] overflow-x-auto [&::-webkit-scrollbar]:hidden">
+                <div className="flex justify-start sm:justify-around items-center px-4 pb-3 pt-2 gap-6 min-w-max">
                     <button 
                         onClick={() => setActiveTab('grades')}
                         className={`flex flex-col items-center gap-1.5 transition-colors ${activeTab === 'grades' ? 'text-blue-600' : 'text-gray-400'}`}
@@ -453,6 +497,13 @@ const MainLayout: React.FC = () => {
                     >
                         <Wallet size={22} strokeWidth={activeTab === 'finance' ? 2.5 : 2} />
                         <span className="text-[10px] font-medium mt-0.5">Tài chính</span>
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('achievements')}
+                        className={`flex flex-col items-center gap-1.5 transition-colors ${activeTab === 'achievements' ? 'text-blue-600' : 'text-gray-400'}`}
+                    >
+                        <Trophy size={22} strokeWidth={activeTab === 'achievements' ? 2.5 : 2} />
+                        <span className="text-[10px] font-medium mt-0.5">Thành tích</span>
                     </button>
                 </div>
             </div>

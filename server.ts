@@ -39,6 +39,11 @@ const AppDataSchema = new mongoose.Schema(
             type: Array,
             default: [],
         },
+
+        achievements: {
+            type: Array,
+            default: [],
+        },
     },
     {
         timestamps: true,
@@ -59,6 +64,7 @@ app.get('/api/data', async (req, res) => {
                 subjects: [],
                 weeks: [],
                 transactions: [],
+                achievements: [],
             });
         }
 
@@ -66,6 +72,7 @@ app.get('/api/data', async (req, res) => {
             subjects: data.subjects || [],
             weeks: data.weeks || [],
             transactions: data.transactions || [],
+            achievements: data.achievements || [],
         });
     } catch (err: any) {
         res.status(500).json({
@@ -76,7 +83,7 @@ app.get('/api/data', async (req, res) => {
 
 app.post('/api/data', async (req, res) => {
     try {
-        const { subjects, weeks, transactions } = req.body;
+        const { subjects, weeks, transactions, achievements } = req.body;
 
         await AppData.findOneAndUpdate(
             { userId: 'default' },
@@ -84,6 +91,7 @@ app.post('/api/data', async (req, res) => {
                 subjects,
                 weeks,
                 transactions,
+                achievements,
             },
             {
                 upsert: true,

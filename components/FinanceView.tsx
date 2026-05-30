@@ -187,11 +187,11 @@ const FinanceView: React.FC = () => {
                                         <p className={`font-bold whitespace-nowrap text-xl ${t.type === 'INCOME' ? 'text-emerald-600' : 'text-gray-900'}`}>{t.type === 'INCOME' ? '+' : '-'}{formatVND(t.amount)}</p>
                                     </div>
                                     
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
                                         <button onClick={() => handleOpenEdit(t)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
                                             <Edit2 size={18} />
                                         </button>
-                                        <button onClick={() => { if(window.confirm('Xóa giao dịch này?')) deleteTransaction(t.id); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                                        <button onClick={() => deleteTransaction(t.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
                                             <Trash2 size={18} />
                                         </button>
                                     </div>

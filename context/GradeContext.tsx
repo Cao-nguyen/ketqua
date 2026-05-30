@@ -2,10 +2,36 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { AppState, SubjectData, Grade, GradeType, BonusPoint, WeekSchedule, Transaction } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
+export const calculateTBM = (regular: number[], midterm: number | null, final: number | null): number => {
+    let numerator = 0;
+    let denominator = 0;
+    
+    if (regular.length > 0) {
+        numerator += regular.reduce((a, b) => a + b, 0);
+        denominator += regular.length;
+    }
+    if (midterm !== null && !isNaN(midterm)) {
+        numerator += midterm * 2;
+        denominator += 2;
+    }
+    if (final !== null && !isNaN(final)) {
+        numerator += final * 3;
+        denominator += 3;
+    }
+    
+    return denominator > 0 ? (numerator / denominator) : 0;
+};
+
+export const parseGradeString = (str?: string): number[] => {
+    if (!str) return [];
+    return str.split(/[,\s]+/).map(g => parseFloat(g)).filter(g => !isNaN(g) && g >= 0 && g <= 10);
+};
+
 interface GradeContextType {
   subjects: SubjectData[];
   weeks: WeekSchedule[];
   transactions: Transaction[];
+  achievements: Achievement[];
   loading: boolean;
   activeSemester: 'HK1' | 'HK2';
   setDefaultSemester: (sem: 'HK1' | 'HK2') => void;
@@ -14,6 +40,7 @@ interface GradeContextType {
   defaultWeekId: string | null;
   setDefaultWeekId: (id: string | null) => void;
   addSubject: (name: string) => void;
+  updateSubject: (id: string, updates: Partial<SubjectData>) => void;
   deleteSubject: (id: string) => void;
   addGrade: (subjectId: string, type: GradeType, value: number, reason: string) => void;
   updateGrade: (subjectId: string, gradeId: string, type: GradeType, newValue: number, newReason: string) => void;
@@ -34,6 +61,11 @@ interface GradeContextType {
   addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
   updateTransaction: (transaction: Transaction) => void;
   deleteTransaction: (id: string) => void;
+
+  // Achievements
+  addAchievement: (ach: Omit<Achievement, 'id' | 'timestamp'>) => void;
+  updateAchievement: (ach: Achievement) => void;
+  deleteAchievement: (id: string) => void;
 }
 
 const GradeContext = createContext<GradeContextType | undefined>(undefined);
@@ -42,7 +74,8 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
  const [data, setData] = useState<AppState>({
   subjects: [],
   weeks: [],
-  transactions: []
+  transactions: [],
+  achievements: []
 });
   const [loading, setLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
@@ -114,7 +147,8 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
          setData({
   subjects: loadedSubjects,
   weeks: loadedWeeks,
-  transactions: result.transactions || []
+  transactions: result.transactions || [],
+  achievements: result.achievements || []
 });
         }
       } catch (error) {
@@ -153,6 +187,7 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const currentSubjects = data.subjects;
   const currentWeeks = data.weeks || [];
   const currentTransactions = data.transactions || [];
+  const currentAchievements = data.achievements || [];
 
   const updateSubjects = useCallback((newSubjects: SubjectData[]) => {
     setData(prev => ({ ...prev, subjects: newSubjects }));
@@ -166,6 +201,10 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setData(prev => ({ ...prev, transactions: newTransactions }));
   }, []);
 
+  const updateAchievements = useCallback((newAchievements: Achievement[]) => {
+    setData(prev => ({ ...prev, achievements: newAchievements }));
+  }, []);
+
   const addSubject = (name: string) => {
     const newSubject: SubjectData = {
       id: uuidv4(),
@@ -177,6 +216,10 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       semester1Average: null
     };
     updateSubjects([...currentSubjects, newSubject]);
+  };
+
+  const updateSubject = (id: string, updates: Partial<SubjectData>) => {
+    updateSubjects(currentSubjects.map(sub => sub.id === id ? { ...sub, ...updates } : sub));
   };
 
   const deleteSubject = (id: string) => {
@@ -395,11 +438,24 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updateTransactions(currentTransactions.filter(t => t.id !== id));
   };
 
+  const addAchievement = (ach: Omit<Achievement, 'id' | 'timestamp'>) => {
+    updateAchievements([...currentAchievements, { ...ach, id: uuidv4(), timestamp: Date.now() }]);
+  };
+
+  const updateAchievement = (ach: Achievement) => {
+    updateAchievements(currentAchievements.map(a => a.id === ach.id ? ach : a));
+  };
+
+  const deleteAchievement = (id: string) => {
+    updateAchievements(currentAchievements.filter(a => a.id !== id));
+  };
+
   return (
     <GradeContext.Provider value={{ 
       subjects: currentSubjects, 
       weeks: currentWeeks,
       transactions: currentTransactions,
+      achievements: currentAchievements,
       loading,
       activeSemester,
       setActiveSemester,
@@ -408,6 +464,7 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       defaultWeekId,
       setDefaultWeekId,
       addSubject,
+      updateSubject,
       deleteSubject,
       addGrade,
       updateGrade,
@@ -423,7 +480,10 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteWeek,
       addTransaction,
       updateTransaction,
-      deleteTransaction
+      deleteTransaction,
+      addAchievement,
+      updateAchievement,
+      deleteAchievement
     }}>
       {children}
     </GradeContext.Provider>
